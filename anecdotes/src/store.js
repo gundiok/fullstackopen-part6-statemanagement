@@ -1,26 +1,61 @@
+import { create } from "zustand";
+import anecdoteService from "./services/anecdotes";
 
-import { create } from 'zustand'
+const useAnecdoteStore = create((set, get) => ({
+  search: "",
+  anecdotes: [],
+  notification: "",
+  actions: {
+    initialize: async () => {
+      const anecdotes = await anecdoteService.getAll();
+      set({ anecdotes });
+    },
+    handleFilterChange: (event) =>
+      set(() => ({
+        search: event.target.value,
+      })),
+    vote: async (id) => {
+      const anecdote = get().anecdotes.find((a) => a.id === id);
+      const updatedAnecdote = { ...anecdote, votes: anecdote.votes + 1 };
+      await anecdoteService.update(updatedAnecdote);
+      set((state) => ({
+        anecdotes: state.anecdotes.map((anecdote) =>
+          anecdote.id === id ? updatedAnecdote : anecdote,
+        ),
+        notification: `you voted '${anecdote.content}'`,
+      }));
+      setTimeout(() => {
+        set(() => ({ notification: "" }));
+      }, 5000);
+    },
+    addAnecdote: async (content) => {
+      const newAnecdote = await anecdoteService.createNew(content);
+      set((state) => ({
+        anecdotes: state.anecdotes.concat(newAnecdote),
+        notification: `You created "${newAnecdote.content}"`,
+      }));
+      setTimeout(() => {
+        set(() => ({ notification: "" }));
+      }, 5000);
+    },
 
-const anecdotesAtStart = [
-  'If it hurts, do it more often',
-  'Adding manpower to a late software project makes it later!',
-  'The first 90 percent of the code accounts for the first 90 percent of the development time...The remaining 10 percent of the code accounts for the other 90 percent of the development time.',
-  'Any fool can write code that a computer can understand. Good programmers write code that humans can understand.',
-  'Premature optimization is the root of all evil.',
-  'Debugging is twice as hard as writing the code in the first place. Therefore, if you write the code as cleverly as possible, you are, by definition, not smart enough to debug it.'
-]
+    deleteAnecdote: async (id) => {
+      const anecdoteToDelete = get().anecdotes.find((a) => a.id === id);
 
-const getId = () => (100000 * Math.random()).toFixed(0)
+      if (anecdoteToDelete.votes === 0) {
+        await anecdoteService.deleteAnecdote(id);
+        set((state) => ({
+          anecdotes: state.anecdotes.filter((a) => a.id !== id),
+        }));
+      }
+    },
+  },
+}));
 
-const asObject = anecdote => ({
-  content: anecdote,
-  id: getId(),
-  votes: 0
-})
-
-const useAnecdoteStore = create((set) => ({
-  anecdotes: anecdotesAtStart.map(asObject),
-  actions: {},
-}))
-
-export const useAnecdotes = () => useAnecdoteStore((state) => state.anecdotes)
+export const useAnecdotes = () => useAnecdoteStore((state) => state.anecdotes);
+export const useAnecdoteSearch = () =>
+  useAnecdoteStore((state) => state.search);
+export const useAnecdoteActions = () =>
+  useAnecdoteStore((state) => state.actions);
+export const useAnecdoteNotification = () =>
+  useAnecdoteStore((state) => state.notification);
