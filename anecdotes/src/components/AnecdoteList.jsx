@@ -17,7 +17,7 @@ const AnecdoteList = () => {
           <div key={anecdote.id}>
             <div>{anecdote.content}</div>
             <div>
-              has {anecdote.votes}
+              has {anecdote.votes} votes
               <button onClick={() => vote(anecdote.id)}>vote</button>
             </div>
             {anecdote.votes === 0 && (

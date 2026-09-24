@@ -8,12 +8,9 @@ const useAnecdoteStore = create((set, get) => ({
   actions: {
     initialize: async () => {
       const anecdotes = await anecdoteService.getAll();
-      set({ anecdotes });
+      set({ anecdotes: anecdotes });
     },
-    handleFilterChange: (event) =>
-      set(() => ({
-        search: event.target.value,
-      })),
+    handleFilterChange: (event) => set({ search: event.target.value }),
     vote: async (id) => {
       const anecdote = get().anecdotes.find((a) => a.id === id);
       const updatedAnecdote = { ...anecdote, votes: anecdote.votes + 1 };
@@ -59,3 +56,5 @@ export const useAnecdoteActions = () =>
   useAnecdoteStore((state) => state.actions);
 export const useAnecdoteNotification = () =>
   useAnecdoteStore((state) => state.notification);
+
+
