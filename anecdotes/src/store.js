@@ -48,7 +48,7 @@ const useAnecdoteStore = create((set, get) => ({
     },
   },
 }));
-
+export default useAnecdoteStore;
 export const useAnecdotes = () => useAnecdoteStore((state) => state.anecdotes);
 export const useAnecdoteSearch = () =>
   useAnecdoteStore((state) => state.search);
@@ -56,5 +56,15 @@ export const useAnecdoteActions = () =>
   useAnecdoteStore((state) => state.actions);
 export const useAnecdoteNotification = () =>
   useAnecdoteStore((state) => state.notification);
+export const useSortedAnecdotes = () => {
+  const anecdotes = useAnecdoteStore((state) => state.anecdotes);
+  return anecdotes.toSorted((a, b) => b.votes - a.votes);
+};
+export const useFilteredAnecdotes = () => {
+  const sortedAnecdotes = useSortedAnecdotes();
+  const search = useAnecdoteSearch();
 
-
+  return sortedAnecdotes.filter((anecdote) =>
+    anecdote.content?.toLowerCase().includes(search.toLowerCase()),
+  );
+};
